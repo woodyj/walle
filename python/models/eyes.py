@@ -1,13 +1,10 @@
 class Eyes(object):
-	def __init__(self):
-		self.leftEyePin = 0
-		self.rightEyePin = 0
+	def __init__(self, leftEyePin, rightEyePin):
+		self.leftEyePin = leftEyePin
+		self.rightEyePin = rightEyePin
 
-	def setLeftEyeGPIO(self, pin):
-		self.leftEyePin = pin
-
-	def setRightEyeGPIO(self, pin):
-		self.leftEyePin = pin
+	def testStr(self):
+		return 'hello eyes'
 
 	def on(self, eye=both):
 		if (eye == 'left'):
