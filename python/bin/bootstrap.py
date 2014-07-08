@@ -5,8 +5,7 @@ print "============================================"
 print "| WALL-E System Boot                       |"
 print "============================================"
 
-# test servos
-print "Testing servos..."
+print "Testing servos:"
 time.sleep(1)
 
 # head
@@ -16,7 +15,7 @@ print "Head turn right..."
 time.sleep(1)
 print "Look up..."
 time.sleep(1)
-print "Look down"
+print "Look down..."
 time.sleep(1)
 
 # arms
@@ -29,6 +28,9 @@ time.sleep(1)
 print "Right arm down..."
 time.sleep(1)
 
+print ""
+print "Testing drivetrain:"
+
 # tracks
 print "Move forward..."
 time.sleep(1)
@@ -39,6 +41,9 @@ time.sleep(1)
 print "Turn right..."
 time.sleep(1)
 
+print ""
+print "Testing eyes:"
+
 # test eyes
 print "Left eye blink..."
 time.sleep(1)
@@ -47,17 +52,30 @@ time.sleep(1)
 print "Both eyes on..."
 time.sleep(1)
 
+print ""
+print "Testing environment sensors:"
+
 # test distance sensor
 print "Testing distance sensor..."
 time.sleep(1)
 
-# test speech
-print "Testing speech..."
-time.sleep(1)
-os.system('mpg321 ../sounds/wall-e.mp3 &')
+# test microphone
+print "Testing mircrophone..."
 time.sleep(1)
 
-# main control loop
-print "Starting WALL-E's brain..."
+# test camera
+print "Testing camera..."
 time.sleep(1)
+
+# test speech
+print ""
+print "Testing speech..."
+time.sleep(1)
+os.system('mpg321 ../lib/sounds/wall-e.mp3 &')
+time.sleep(3)
+
+# main control loop
+print ""
+print "Starting WALL-E's brain..."
+time.sleep(2)
 print "Uh oh!  No brain detected!"
