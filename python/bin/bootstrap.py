@@ -1,81 +1,61 @@
-import os
-import time
+import _config_
+import sys, time, tty, termios
 
-print "============================================"
-print "| WALL-E System Boot                       |"
-print "============================================"
+from models.drivers.pwm.Adafruit_PWM_Servo_Driver import PWM
 
-print "Testing servos:"
-time.sleep(1)
+pwm = PWM(_config_.pwmI2CAddr, debug=_config_.pwmI2CDebug)
+pwm.setPWMFreq(_config_.pwmFreq)
 
-# head
-print "Head turn left..."
-time.sleep(1)
-print "Head turn right..."
-time.sleep(1)
-print "Look up..."
-time.sleep(1)
-print "Look down..."
-time.sleep(1)
+from models.head import Head
 
-# arms
-print "Left arm up..."
-time.sleep(1)
-print "Left arm down..."
-time.sleep(1)
-print "Right arm up..."
-time.sleep(1)
-print "Right arm down..."
-time.sleep(1)
+head = Head(servoController=pwm, servoPinPan=_config_.servoPinHeadPan, servoPinTilt=_config_.servoPinHeadTilt, servoLimitPanMin=_config_.servoLimitHeadRight, servoLimitPanMax=_config_.servoLimitHeadLeft, servoLimitTiltMin=_config_.servoLimitHeadDown, servoLimitTiltMax=_config_.servoLimitHeadUp)
+head.pan(_config_.servoLimitHeadCenter)
+head.tilt(_config_.servoLimitHeadLevel)
 
-print ""
-print "Testing drivetrain:"
+def getch():
+    fd = sys.stdin.fileno()
+    old_settings = termios.tcgetattr(fd)
+    try:
+        tty.setraw(sys.stdin.fileno())
+        ch = sys.stdin.read(1)
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+    return ch
 
-# tracks
-print "Move forward..."
-time.sleep(1)
-print "Move backward..."
-time.sleep(1)
-print "Turn left..."
-time.sleep(1)
-print "Turn right..."
-time.sleep(1)
+"""
+i = head.servoLimitPanMin
 
-print ""
-print "Testing eyes:"
+while (i < head.servoLimitPanMax):
+	i += 1
+	head.pan(i)
+	time.sleep(0.005)
 
-# test eyes
-print "Left eye blink..."
-time.sleep(1)
-print "Right eye blink..."
-time.sleep(1)
-print "Both eyes on..."
-time.sleep(1)
+head.pan(_config_.servoLimitHeadCenter)
+#time.wait(0.1)
+"""
+import sys, tty, termios, time
 
-print ""
-print "Testing environment sensors:"
+stop = False
 
-# test distance sensor
-print "Testing distance sensor..."
-time.sleep(1)
+while (not stop):
+    char = getch()
 
-# test microphone
-print "Testing mircrophone..."
-time.sleep(1)
+    if (char == 'q'):
+    	print "Quitting..."
+    	stop = True
 
-# test camera
-print "Testing camera..."
-time.sleep(1)
+    if (char == 'j' or char == 'u' or char == 'n'):
+    	head.pan(head.panPosition+5)
 
-# test speech
-print ""
-print "Testing speech..."
-time.sleep(1)
-os.system('mpg321 ../lib/sounds/wall-e.mp3 &')
-time.sleep(3)
+    if (char == 'l' or char == 'o' or char == ','):
+    	head.pan(head.panPosition-5)
 
-# main control loop
-print ""
-print "Starting WALL-E's brain..."
-time.sleep(2)
-print "Uh oh!  No brain detected!"
+    if (char == 'i' or char == 'u' or char == 'o'):
+    	head.tilt(head.tiltPosition+5)
+
+    if (char == 'm' or char == 'n' or char == ','):
+    	head.tilt(head.tiltPosition-5)
+
+    if (char == 'k'):
+    	head.pan(_config_.servoLimitHeadCenter)
+    	head.tilt(_config_.servoLimitHeadLevel)

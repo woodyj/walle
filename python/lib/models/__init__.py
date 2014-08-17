@@ -1,2 +1,3 @@
-__all__ = ['eyes']
+__all__ = ['drivers','eyes']
+import drivers
 import eyes
