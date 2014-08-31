@@ -18,8 +18,8 @@ servoLimitHeadCenter = 385
 servoLimitHeadLeft = 550
 
 servoLimitHeadUp = 410
-servoLimitHeadLevel = 350
-servoLimitHeadDown = 220
+servoLimitHeadLevel = 360
+servoLimitHeadDown = 250
 # ------------------------------ #
 
 # ------- Servo Pins ----------- #
@@ -29,4 +29,8 @@ servoPinArmLeft = 0
 servoPinArmRight = 1
 servoPinTrackLeft = 3
 servoPinTrackRight = 4
+# ------------------------------ #
+
+# -------- Voice --------------- #
+voiceDefaultVolume = 0.1
 # ------------------------------ #
