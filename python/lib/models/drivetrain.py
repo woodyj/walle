@@ -1,23 +1,29 @@
 #from servo import Servo
 
 class Drivetrain(object):
-	"""
-	def __init__(self):
-		self.leftTrackServo = new Servo()
-		self.rightTrackServo = new Servo()
-	"""
+	def __init__(self, servoController, servoPinLeft, servoPinRight, servoLimitCW, servoLimitCCW):
+		self.servoController = servoController
+		self.servoPinLeft = servoPinLeft
+		self.servoPinRight = servoPinRight
+		self.servoLimitCW = servoLimitCW
+		self.servoLimitCCW = servoLimitCCW
 
 	def forward(self):
-		print "Moving forward..."
+		self.servoController.setPWM(self.servoPinLeft, 0, self.servoLimitCCW)
+		self.servoController.setPWM(self.servoPinRight, 0, self.servoLimitCW)
 
 	def backward(self):
-		print "Moving backward..."
+		self.servoController.setPWM(self.servoPinLeft, 0, self.servoLimitCW)
+		self.servoController.setPWM(self.servoPinRight, 0, self.servoLimitCCW)
 
 	def stop(self):
-		print "Stopping..."
+		self.servoController.setPWM(self.servoPinLeft, 0, 0)
+		self.servoController.setPWM(self.servoPinRight, 0, 0)
 
-	def turnLeft(self):
-		print "Turning left..."
+	def spinLeft(self):
+		self.servoController.setPWM(self.servoPinLeft, 0, self.servoLimitCCW)
+		self.servoController.setPWM(self.servoPinRight, 0, self.servoLimitCCW)
 
-	def turnRight(self):
-		print "Turning right..."
+	def spinRight(self):
+		self.servoController.setPWM(self.servoPinLeft, 0, self.servoLimitCW)
+		self.servoController.setPWM(self.servoPinRight, 0, self.servoLimitCW)

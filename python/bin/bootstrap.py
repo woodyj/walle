@@ -1,18 +1,20 @@
 import _config_
-#import sys, time, tty, termios
 import time
-
-import termios, fcntl, sys, os
+import cwiid
+import sys
+import os
+import termios
+import fcntl
 fd = sys.stdin.fileno()
 
 from models.drivers.pwm.Adafruit_PWM_Servo_Driver import PWM
-
 pwm = PWM(_config_.pwmI2CAddr, debug=_config_.pwmI2CDebug)
 pwm.setPWMFreq(_config_.pwmFreq)
 
 from models.head import Head
 from models.arms import Arms
 from models.voice import Voice
+from models.drivetrain import Drivetrain
 
 head = Head(
     servoController=pwm,
@@ -32,6 +34,14 @@ arms = Arms(
     servoPinRight=_config_.servoPinArmRight,
     servoLimitMin=_config_.servoLimitArmMin,
     servoLimitMax=_config_.servoLimitArmMax
+)
+
+tracks = Drivetrain(
+    servoController=pwm,
+    servoPinLeft=_config_.servoPinTrackLeft,
+    servoPinRight=_config_.servoPinTrackRight,
+    servoLimitCW=_config_.servoLimitTrackCW,
+    servoLimitCCW=_config_.servoLimitTrackCCW
 )
 
 voice = Voice(volume=_config_.voiceDefaultVolume)
@@ -76,105 +86,247 @@ head.pan(_config_.servoLimitHeadCenter)
 #time.wait(0.1)
 """
 
-try:
-    minServoSpeed = 1
-    maxServoSpeed = 30
-    servoSpeed = 10
-    stop = False
+minServoSpeed = 1
+maxServoSpeed = 30
+servoSpeed = 10
+stop = False
+wiiRemote = None
 
-    while (not stop):
-        char = getKeyPress()
+def displayScreen(mode):
+    if (mode == 'wii-connect'):
+        os.system('clear')
+        print 'Press 1 & 2 on wii remote to connect...'
 
-        if (char == 'q'):
-            print "Quitting..."
-            stop = True
+    elif (mode == 'wii-connect-failed'):
+        os.system('clear')
+        print 'Failed to connect to Wii remote.  Switching to keyboard mode...'
 
-        if (char == '='):
-            servoSpeed += 2
-            if (servoSpeed > maxServoSpeed):
-                servoSpeed = maxServoSpeed
+    elif (mode == 'wii-disconnect'):
+        os.system('clear')
+        print 'Disconnecting Wii remote...'
 
-        if (char == '-'):
-            servoSpeed -= 2
-            if (servoSpeed < minServoSpeed):
-                servoSpeed = minServoSpeed
+    elif (mode == 'main'):
+        os.system('clear')
+        print 'WALL-E Control (keyboard mode)'
+        print '=============================='
+        print ''
+        print 'Keyboard Controls'
+        print '--------------------------'
+        print ''
+        print 'Increase servo speed: ='
+        print 'Decrease servo speed: -'
+        print ''
+        print 'Left arm up: w'
+        print 'Left arm out: s'
+        print 'Left arm down: x'
+        print ''
+        print 'Right arm up: r'
+        print 'Right arm out: f'
+        print 'Right arm up: v'
+        print ''
+        print 'Head tilt up: i'
+        print 'Head tilt down: m'
+        print 'Head center: k'
+        print 'Head pan left: j'
+        print 'Head pan right: l'
+        print ''
+        print 'QUIT: q'
+        print ''
 
-        if (char == 'j' or char == 'u' or char == 'n'):
-            head.pan(head.panPosition + servoSpeed)
+        if (wiiRemote):
+            print 'Wii Remote Controls'
+            print '--------------------------'
+            print ''
+            print 'Button A: '
+            print 'Button B: '
+            print 'Button 1: '
+            print 'Button 2: '
+            print 'Button (-): '
+            print 'Button (+): '
+            print 'D-pad: tracks'
+            print 'Home button: enter keyboard mode'
+        else:
+            print 'Connect Wii remote: ]'
+            print ''
 
-        if (char == 'l' or char == 'o' or char == ','):
-            head.pan(head.panPosition - servoSpeed)
 
-        if (char == 'i' or char == 'u' or char == 'o'):
-            head.tilt(head.tiltPosition + servoSpeed)
+displayScreen('main')
 
-        if (char == 'm' or char == 'n' or char == ','):
-            head.tilt(head.tiltPosition - servoSpeed)
+#try:
 
-        if (char == 'k'):
-            head.pan(_config_.servoLimitHeadCenter)
-            head.tilt(_config_.servoLimitHeadLevel)
+while (not stop):
+    char = getKeyPress()
 
-        if (char == 'w'):
-            arms.upLeft(servoSpeed)
+    if (char == 'q'):
+        print "Quitting..."
+        stop = True
 
-        if (char == 's'):
-            arms.centerLeft()
+    if (char == '='):
+        servoSpeed += 2
+        if (servoSpeed > maxServoSpeed):
+            servoSpeed = maxServoSpeed
 
-        if (char == 'x'):
-            arms.downLeft(servoSpeed)
+    if (char == '-'):
+        servoSpeed -= 2
+        if (servoSpeed < minServoSpeed):
+            servoSpeed = minServoSpeed
 
-        if (char == 'e'):
-            arms.upLeft(servoSpeed)
-            arms.upRight(servoSpeed)
+    if (char == 'j' or char == 'u' or char == 'n'):
+        head.pan(head.panPosition + servoSpeed)
 
-        if (char == 'd'):
-            arms.centerBoth()
+    if (char == 'l' or char == 'o' or char == ','):
+        head.pan(head.panPosition - servoSpeed)
 
-        if (char == 'c'):
-            arms.downLeft(servoSpeed)
-            arms.downRight(servoSpeed)
+    if (char == 'i' or char == 'u' or char == 'o'):
+        head.tilt(head.tiltPosition + servoSpeed)
 
-        if (char == 'r'):
-            arms.upRight(servoSpeed)
+    if (char == 'm' or char == 'n' or char == ','):
+        head.tilt(head.tiltPosition - servoSpeed)
 
-        if (char == 'f'):
-            arms.centerRight()
+    if (char == 'k'):
+        head.pan(_config_.servoLimitHeadCenter)
+        head.tilt(_config_.servoLimitHeadLevel)
 
-        if (char == 'v'):
-            arms.downRight(servoSpeed)
+    if (char == 'w'):
+        arms.upLeft(servoSpeed)
 
-        if (char == '1'):
-            voice.say('walle_1')
+    if (char == 's'):
+        arms.centerLeft()
 
-        if (char == '2'):
-            voice.say('walle_2')
+    if (char == 'x'):
+        arms.downLeft(servoSpeed)
 
-        if (char == '3'):
-            voice.say('walle_3')
+    if (char == 'e'):
+        arms.upLeft(servoSpeed)
+        arms.upRight(servoSpeed)
 
-        if (char == '4'):
-            voice.say('eva_2')
+    if (char == 'd'):
+        arms.centerBoth()
 
-        if (char == '5'):
-            voice.say('tada')
+    if (char == 'c'):
+        arms.downLeft(servoSpeed)
+        arms.downRight(servoSpeed)
 
-        if (char == '6'):
+    if (char == 'r'):
+        arms.upRight(servoSpeed)
+
+    if (char == 'f'):
+        arms.centerRight()
+
+    if (char == 'v'):
+        arms.downRight(servoSpeed)
+
+    if (char == '1'):
+        voice.say('walle_1')
+
+    if (char == '2'):
+        voice.say('walle_2')
+
+    if (char == '3'):
+        voice.say('walle_3')
+
+    if (char == '4'):
+        voice.say('eva_2')
+
+    if (char == '5'):
+        voice.say('tada')
+
+    if (char == '6'):
+        voice.say('whoa')
+
+    if (char == '7'):
+        voice.say('grunting')
+
+    if (char == '8'):
+        voice.say('buynlarge')
+
+    if (char == '9'):
+        voice.sing('background_music')
+
+    if (char == '0'):
+        voice.sing('la vie en rose')
+
+    if (char == ']'):
+        displayScreen('wii-connect')
+        wiiRemote = None 
+        i = 2 
+        while not wiiRemote: 
+          try: 
+            wiiRemote = cwiid.Wiimote() 
+            wiiRemote.rumble = True
+            time.sleep(0.3)
+            wiiRemote.rumble = False
+            displayScreen('main')
+          except RuntimeError: 
+            if (i > 10):
+                displayScreen('wii-connect-failed')
+                time.sleep(1)
+                break 
+            print "Error opening wiimote connection" 
+            print "attempt " + str(i) 
+            i += 1 
+
+        #set Wiimote to report button presses and accelerometer state 
+        wiiRemote.rpt_mode = cwiid.RPT_BTN | cwiid.RPT_ACC 
+         
+        #turn on led to show connected 
+        wiiRemote.led = 1
+
+        """
+        while wiiRemote:
+            print ''
+            print '---------------------------------------------------------------'
+            print wiiRemote.state
+            print wiiRemote.state['buttons']
+            print wiiRemote.state['acc']
+            time.sleep(0.5)
+        """
+
+    #while (wiiRemote):
+    if (wiiRemote):
+        wiiBut = wiiRemote.state['buttons']
+        wiiAcc = wiiRemote.state['acc']
+
+        move = False
+
+        if (wiiBut & 128):
+            wiiRemote = False
+            displayScreen('wii-disconnect')
+            time.sleep(1)
+            displayScreen('main')
+
+        if (wiiBut & 2):
             voice.say('whoa')
 
-        if (char == '7'):
-            voice.say('grunting')
+        if (wiiBut & 1):
+            voice.say('tada')
 
-        if (char == '8'):
-            voice.say('buynlarge')
+        if (wiiBut & 256):
+            move = True
+            tracks.spinLeft()
 
-        if (char == '9'):
-            voice.sing('background_music')
+        if (wiiBut & 512):
+            move = True
+            tracks.spinRight()
 
-        if (char == '0'):
-            voice.sing('la vie en rose')
+        if (wiiBut & 1024):
+            move = True
+            tracks.backward()
 
+        if (wiiBut & 2048):
+            move = True
+            tracks.forward()
 
+        if (not move):
+            tracks.stop()
+
+        #os.system('clear')
+        #print ('Buttons: %s' % wiiBut)
+        #print 'Acc:'
+        #print wiiAcc
+
+"""
 finally:
     termios.tcsetattr(fd, termios.TCSAFLUSH, oldterm)
     fcntl.fcntl(fd, fcntl.F_SETFL, oldflags)
+"""

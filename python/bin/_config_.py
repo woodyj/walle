@@ -20,6 +20,9 @@ servoLimitHeadLeft = 550
 servoLimitHeadUp = 410
 servoLimitHeadLevel = 360
 servoLimitHeadDown = 250
+
+servoLimitTrackCW = 900
+servoLimitTrackCCW = 100
 # ------------------------------ #
 
 # ------- Servo Pins ----------- #
